@@ -1,5 +1,20 @@
 #helper.py
 
+def reset_pins():
+  pin_position = {
+                     0:(240,85),
+                     1:(270,85),
+                     2:(300,85),
+                     3:(330,85),
+                     4:(255,95),
+                     5:(285,95),
+                     6:(315,95),
+                     7:(270,105),
+                     8:(300,105),
+                     9:(285,115)
+                 }
+  return pin_position
+
 def calculate_score(scorecard, frame, midframe, total):
   
   #function to update the scorecard on completed bowling frames

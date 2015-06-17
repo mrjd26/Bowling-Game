@@ -5,4 +5,5 @@ from bowling import views
 urlpatterns = patterns('',
   url(r'^$', views.index),
   url(r'^scorecard/$', views.game_flow),
+  url(r'^reset/$', views.washout),
 )

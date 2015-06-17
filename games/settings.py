@@ -74,9 +74,9 @@ else:
           'ENGINE': 'django.db.backends.mysql',
           'NAME': 'credentials',
           'USER': 'root',
-          #'HOST': 'localhost',
-          'HOST': '173.194.227.132',
-          'PASSWORD': ''
+          'HOST': 'localhost',
+          #'HOST': '173.194.227.132',
+          'PASSWORD': 'Guitar007'
       }
   }
 

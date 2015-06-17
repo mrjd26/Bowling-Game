@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, render_to_response
 from django.http import HttpResponse
 import json
 from django.utils.datastructures import SortedDict
-from random import randrange
-from helper import calculate_score, calculate_10th
+from random import randrange, choice
+from helper import reset_pins, calculate_score, calculate_10th
 
 
 def index(request):
@@ -18,7 +18,8 @@ def index(request):
   request.session['pins_standing'] = pins_standing
   request.session['first_roll'] = True
   request.session['game_state'] = "running" 
-
+  pin_position = reset_pins()
+  request.session['pin_position'] = pin_position
   request.session['score'] = {
               1: ['', '', ''],
               2: ['', '', ''],
@@ -42,8 +43,14 @@ def index(request):
                }
           }
 
-  return render(request, 'index.html')
+  return render(request, 'index.html',{'pin_position':json.dumps(pin_position)})
 
+def washout(request):
+  payload = request.GET['payload']
+  p = json.loads(payload)
+  p['gamestate']['pin_position'] = reset_pins()
+  request.session['pin_position'] = reset_pins()
+  return HttpResponse(json.dumps( p ))
 
 def game_flow(request):
 
@@ -62,7 +69,7 @@ def game_flow(request):
   pins_standing = request.session.get('pins_standing')
   score = request.session.get('score')
   game_state = request.session.get('game_state')
-
+  pin_position = request.session.get('pin_position')
 
   if game_state != "running":
     #Game Over.....prompt user to refresh browser
@@ -83,12 +90,12 @@ def game_flow(request):
         pins_standing = 10
 
     #randomly hit pins on range 0 to 10
-    #pins_hit = randrange(0,pins_standing + 1)
+    pins_hit = randrange(0,pins_standing + 1)
     
     """
     uncomment below for unit testing
     """
-    pins_hit = int(request.GET['raw_input'])
+    #pins_hit = int(request.GET['raw_input'])
     """
     """
 
@@ -105,9 +112,14 @@ def game_flow(request):
         first_roll = True
         midframe = False
         pins_standing = 10
+        pin_position = reset_pins()
       #progress to second roll
       elif first_roll and pins_standing > 0:
         score[frame][0] = pins_hit
+
+        for i in range(pins_hit):
+          pin_position.pop(choice(pin_position.keys()))
+        
         first_roll = False
         midframe = True
       #handle spare scenario
@@ -119,11 +131,14 @@ def game_flow(request):
         request.session['first_roll'] = first_roll
         midframe = False
         pins_standing = 10
+        pin_position = reset_pins()
       #end of rolls, progress to next frame
       else:
         score[frame][1] = pins_hit
         frame += 1
         pins_standing = 10
+        for i in range(pins_hit):
+          pin_position.pop(choice(pin_position.keys()))
         first_roll = True
         midframe = False
  
@@ -220,6 +235,7 @@ def game_flow(request):
     request.session['third_roll'] = third_roll
     request.session['score'] = score
     request.session['game_state'] = game_state
+    request.session['pin_position'] = pin_position
 
     score['gamestate']['frame'] = frame
     score['gamestate']['pins_standing'] = pins_standing
@@ -229,5 +245,6 @@ def game_flow(request):
     score['gamestate']['second_roll'] = second_roll
     score['gamestate']['third_roll'] = third_roll    
     score['gamestate']['total'] = total
+    score['gamestate']['pin_position'] = pin_position
 
     return HttpResponse(json.dumps(score))
